@@ -8,7 +8,7 @@ using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 // PhotonNetwork 에서 CallBack 을 받고 싶다(서버에서의 반응을 구현하고 싶다) -> MonoBehaviourPunCallbacks 상속
 public class LobbyManager : MonoBehaviourPunCallbacks
 {
-    public enum Panel { Login, Menu, Lobby, Room }
+    public enum Panel { Login, Menu, Lobby, Room, Register }
 
     [SerializeField] StatePanel statePanel;
 
@@ -16,11 +16,18 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     [SerializeField] MenuPanel menuPanel;
     [SerializeField] RoomPanel roomPanel;
     [SerializeField] LobbyPanel lobbyPanel;
+    [SerializeField] RegisterPanel registerPanel;
 
     private void Start()
     {
-        // 시작 시 로그인 화면
-        SetActivePanel(Panel.Login);
+        if (PhotonNetwork.IsConnected)
+            OnConnectedToMaster();
+        else if (PhotonNetwork.InRoom)
+            OnJoinedRoom();
+        else if (PhotonNetwork.InLobby)
+            OnJoinedLobby();
+        else
+            OnDisconnected(DisconnectCause.None);
     }
 
     public override void OnConnectedToMaster()
@@ -50,6 +57,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
         // 방에 들어갈 때 ready 해제 / 방을 나갈 때 해제해도 됨
         PhotonNetwork.LocalPlayer.SetReady(false);
+        PhotonNetwork.LocalPlayer.SetLoad(false);
 
         PhotonNetwork.AutomaticallySyncScene = true; // true : 방장의 씬을 자동으로 따라감
         roomPanel.UpdatePlayerList();
@@ -121,11 +129,22 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         lobbyPanel.UpdateRoomList(roomList);
     }
 
+    public void OnRegisterPanel()
+    {
+        SetActivePanel(Panel.Register);
+    }
+
+    public void OnRegisterCancel()
+    {
+        SetActivePanel(Panel.Login);
+    }
+
     private void SetActivePanel(Panel panel)
     {
         loginPanel.gameObject?.SetActive(panel == Panel.Login);
         menuPanel.gameObject?.SetActive(panel == Panel.Menu);
         roomPanel.gameObject?.SetActive(panel == Panel.Room);
         lobbyPanel.gameObject?.SetActive(panel == Panel.Lobby);
+        registerPanel.gameObject?.SetActive(panel == Panel.Register);
     }
 }

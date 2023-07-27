@@ -29,7 +29,6 @@ public class RoomPanel : MonoBehaviour
             CheckPlayerReady();
         else
             startButton.gameObject.SetActive(false);
-
     }
 
     // Start Button
